@@ -26,10 +26,12 @@ import paramiko
 
 #set oauth api credentials
 #specific to the fabric care organization in flite's system
-auth = OAuth1('oyn3xhresbffqqwfbk9zxtx6ibj8l93taniqgkatd4abqw2knftmhzgahgnapxevzsa87dyjxbcwxyfjgstr6xgrnvvf5vqf',
-			  'kHPJw5NNKSwKrdGNACqgYKF4Gy6yJCZ4QXW0njFlRCQiWEhBg6ixcDv2WrtnMbP9',
-              'oyn3xhresbffqqwfbk9zxtx6ibj8l93taniqgkatd4abqw2knftmhzgahgnapxevzsa87dyjxbcwxyfjgstr6xgrnvvf5vqf', 
-              'kHPJw5NNKSwKrdGNACqgYKF4Gy6yJCZ4QXW0njFlRCQiWEhBg6ixcDv2WrtnMbP9')
+auth = OAuth1(
+	'oyn3xhresbffqqwfbk9zxtx6ibj8l93taniqgkatd4abqw2knftmhzgahgnapxevzsa87dyjxbcwxyfjgstr6xgrnvvf5vqf',
+	'kHPJw5NNKSwKrdGNACqgYKF4Gy6yJCZ4QXW0njFlRCQiWEhBg6ixcDv2WrtnMbP9',
+   'oyn3xhresbffqqwfbk9zxtx6ibj8l93taniqgkatd4abqw2knftmhzgahgnapxevzsa87dyjxbcwxyfjgstr6xgrnvvf5vqf', 
+   'kHPJw5NNKSwKrdGNACqgYKF4Gy6yJCZ4QXW0njFlRCQiWEhBg6ixcDv2WrtnMbP9'
+	)
 
 
 #define campaigns & their guids
@@ -42,6 +44,7 @@ localpath = 'C:\\Users\\orrwatso\\Documents\\Data-Sources\\Flite\\'
 
 #requests data from 60 days prior though today
 def get_reportID(guid, auth):
+	print('get_reportID for ' + guid + '...')
 	#request data to be processed
 	url = "http://api.flite.com/rr/v1.0/data/report/campaign/" + guid + ".csv?"
 	
@@ -50,7 +53,6 @@ def get_reportID(guid, auth):
 	params.update(end = time.strftime("%m/%d/%Y"))
 	
 	d = date.today() - timedelta(days=60)
-	
 	params.update(start = d.strftime("%m/%d/%Y"))
 	
 	#report_guid = requests.get(url,params=params, auth=auth )
@@ -66,6 +68,7 @@ def get_reportID(guid, auth):
 #get report status
 #this returns nothing intiially.  need to wait a few seconds.
 def get_status(report_guid, auth):
+	print('get_status for ' + report_guid + '...')
 	info = "http://api.flite.com/rr/v1.0/data/report/info/"
 	info = info + report_guid
 	info_response = requests.get(info, auth=auth).json()
@@ -76,6 +79,7 @@ def get_status(report_guid, auth):
 
 #waits for flite's api to process the data
 def wait_for_processing(report_guid,auth):
+	print('wait_for_processing for ' + report_guid + '...')
 	status = []
 	#check status every 5 seconds
 	start = time.clock()
@@ -85,7 +89,7 @@ def wait_for_processing(report_guid,auth):
 		try:
 			status = get_status(report_guid,auth)
 		except:
-			print('bad api response')
+			print('bad api response - get status')
 		print(status, 'for ', now - start, 'seconds')
 		now = time.clock()
 		if now - start > 300 :
@@ -95,6 +99,7 @@ def wait_for_processing(report_guid,auth):
 
 #returns a csv of duplicated rows
 def get_data(report_guid, auth):
+	print('get_data for ' + report_guid + '...')
 	data_url = "http://api.flite.com/rr/v1.0/data/report/download/"
 	data_url = data_url + report_guid 
 	data_response = requests.get(data_url, auth=auth)
@@ -105,8 +110,8 @@ def get_data(report_guid, auth):
 
 #cleans & dedups, puts data into a python list
 def dedup_clean_data(creativeMetadata):
+	print('dedup_clean_data...')
 	data_rows = creativeMetadata.split("\n")
-
 	nice_data = [i.split(',') for i in data_rows]
 
 	deduped = []
@@ -124,14 +129,11 @@ def creative_lookup(guid,auth):
 
 	try:
 		report_guid = get_reportID(guid,auth)
+		wait_for_processing(report_guid,auth)
+		creativeMetadata = get_data(report_guid,auth)
+		data = dedup_clean_data(creativeMetadata)
 	except:
-		print('bad api response')
-
-	wait_for_processing(report_guid,auth)
-
-	creativeMetadata = get_data(report_guid,auth)
-
-	data = dedup_clean_data(creativeMetadata)
+		print('bad api response - get report id')
 
 	return data
 
@@ -175,7 +177,7 @@ write_table(final_table,filename)
 #copy from hard drive to axiom's sftp
 sftp = open_connection()
 sftp.put(localpath + filename,filename)
-#
+
 print ('files on sftp:')
 print (sftp.listdir())
 
