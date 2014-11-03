@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>d7e547f7-0b80-4153-9af7-8a35596ee1db</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>ETL_Flite_Lookup_Data.py</StartupFile>
+    <StartupFile>ETL_Flite_Lookup_Data_v20.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,6 +24,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="ETL_Flite_Lookup_Data_v20.py" />
     <Compile Include="ETL_Flite_Lookup_Data.py" />
   </ItemGroup>
   <ItemGroup>
